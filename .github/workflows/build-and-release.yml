@@ -1007,21 +1007,20 @@ jobs:
           ref: ${{ github.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Increment alpha version
+      - name: Increment pre-release version
         id: bump
         run: |
           VERSIONS_FILE="ci/build/component-versions.properties"
           CURRENT_VERSION=$(awk -F= '$1 == "integrator.version" { print $2; exit }' "${VERSIONS_FILE}" | tr -d '\r')
           echo "Current version: ${CURRENT_VERSION}"
 
-          # Extract alpha number and increment it
-          if [[ "${CURRENT_VERSION}" =~ ^(.+-alpha)([0-9]+)$ ]]; then
+          # Match any pre-release suffix ending in a number e.g. alpha11, beta1, RC2
+          if [[ "${CURRENT_VERSION}" =~ ^(.*[^0-9])([0-9]+)$ ]]; then
             PREFIX="${BASH_REMATCH[1]}"
-            ALPHA_NUM="${BASH_REMATCH[2]}"
-            NEXT_ALPHA_NUM=$((ALPHA_NUM + 1))
-            NEW_VERSION="${PREFIX}${NEXT_ALPHA_NUM}"
+            NUM="${BASH_REMATCH[2]}"
+            NEW_VERSION="${PREFIX}$((NUM + 1))"
           else
-            echo "Error: integrator.version '${CURRENT_VERSION}' does not match expected alpha pattern." >&2
+            echo "Error: integrator.version '${CURRENT_VERSION}' does not end in a number and cannot be auto-incremented." >&2
             exit 1
           fi
 
